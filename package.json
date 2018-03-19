@@ -21,6 +21,7 @@
     "express": "^4.16.2",
     "express-validation": "^1.0.2",
     "firebase": "^4.9.1",
-    "firebase-admin": "^5.8.2"
+    "firebase-admin": "^5.8.2",
+    "jsonwebtoken": "^8.2.0"
   }
 }

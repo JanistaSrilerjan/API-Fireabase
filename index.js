@@ -16,8 +16,6 @@ var firebase = require('firebase');
 var admin = require('firebase-admin');
 const firebaseApp = firebase.initializeApp(config);
 var data = firebaseApp.database().ref();
-var db = firebaseApp.database();
-//var ref = db.ref("/");
 var serviceAccount = require('./test-pj-92383-firebase-adminsdk-dmmav-668d0462ec.json');
 
 admin.initializeApp({
@@ -34,6 +32,7 @@ app.get('/user', function (req, res) {
   data.once("value", function (snapshot) {
     res.json(snapshot);
   });
+
 });
 app.get('create/:uid', function (req, res) {
   var uid = req.body.uid;
@@ -71,12 +70,12 @@ app.get('/alluser', function (req, res) {
   res.json("success");
 });
 
-app.post('/create/user', function (req, res) {
+app.post('/signup', function (req, res) {
   admin.auth().createUser({
-      email: req.body.email,
-      password: req.body.password
-      //phoneNumber: "+11234567890"
-    })
+    email: req.body.email,
+    password: req.body.password
+    //phoneNumber: "+11234567890"
+  })
     .then(function (userRecord) {
       console.log("Successfully created new user:", userRecord.uid);
       return res.json({
@@ -85,39 +84,75 @@ app.post('/create/user', function (req, res) {
         user: {
           uid: userRecord.uid,
           email: userRecord.email
-          //password: userRecord.password
         }
       });
     })
     .catch(function (error) {
+
+      var errorMessage = error.message; 
       console.log("Error creating new user:", error);
       res.json({
         success: false,
-        message: 'User cannot be added!'
+        message: errorMessage
       });
     });
 });
 app.post('/login', function (req, res) {
   firebase.auth().signInWithEmailAndPassword(req.body.email, req.body.password)
     .then(function (userRecord) {
-      console.log("Successfully", userRecord.uid);
-      return res.json({
+      console.log("Log in by", userRecord.uid);
+      firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+          user.getIdToken().then(function(data) {
+            return res.json({
+              success: true,
+              message: 'Log in success!',
+              token: data,
+              user: {
+                uid: userRecord.uid,
+                email: userRecord.email
+              }
+            });
+           // console.log(data);
+          });
+        }
+      });
+      /*return res.json({
         success: true,
-        message: 'LOG in success!',
+        message: 'Log in success!',
         user: {
           uid: userRecord.uid,
           email: userRecord.email
         }
-      });
+      });*/
     })
     .catch(function (error) {
+      var errorCode = error.code;
+      var errorMessage = error.message;
+
+      if ( errorCode === 'auth/user-not-found' ) {
+        res.json({
+          success: false,
+          message: 'Authentication failed. User not found.'
+        });
+      }
+      else if (errorCode === 'auth/wrong-password') {
+        res.json({
+          success: false,
+          message: 'Wrong password.'
+        });
+      } else {
+        res.json({
+          success: false,
+          message: errorMessage
+        });
+      }
       console.log(error);
-      res.json({
-        success: false,
-        message: 'Cannot be login!'
-      });
+
+      //throw error;
     });
+
 });
 app.listen(port, hostname, () => {
-  console.log('Simple API started at http://localhost:' + port);
+  console.log('UrQ API started at http://localhost:' + port);
 });
