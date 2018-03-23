@@ -16,7 +16,11 @@ var firebase = require('firebase');
 var admin = require('firebase-admin');
 const firebaseApp = firebase.initializeApp(config);
 var data = firebaseApp.database().ref();
+var db = firebase.database();
 var serviceAccount = require('./test-pj-92383-firebase-adminsdk-dmmav-668d0462ec.json');
+
+var jwt = require('jsonwebtoken');
+var md5 = require('md5');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -71,39 +75,94 @@ app.get('/alluser', function (req, res) {
 });
 
 app.post('/signup', function (req, res) {
-  admin.auth().createUser({
-    email: req.body.email,
-    password: req.body.password
-    //phoneNumber: "+11234567890"
-  })
-    .then(function (userRecord) {
-      console.log("Successfully created new user:", userRecord.uid);
-      return res.json({
-        success: true,
-        message: 'New user has been created',
-        user: {
-          uid: userRecord.uid,
-          email: userRecord.email
-        }
-      });
-    })
-    .catch(function (error) {
+  var form = req.body;
+  firebase.auth().createUserWithEmailAndPassword(form.email, form.password).then(
+    user => {
+      var profile = {
+        username: form.username,
+        phone: form.phone
+      };
+      var newShop = {
+        nameShop: form.nameShop,
+        type: form.type,
+        qType: form.qType,
+        serviceType: form.serviceType,
+        avgServiceTime: form.avgServiceTime,
+        numServer: form.numServer
+      };
+      var timeShop = {
+        open: form.open,
+        close: form.close,
+        reserve: form.reserve
+      };
 
-      var errorMessage = error.message; 
-      console.log("Error creating new user:", error);
-      res.json({
-        success: false,
-        message: errorMessage
+      var uid = md5(form.email);
+      db.ref('uidStorage/').set(uid);
+      db.ref('user/' + uid + '/profile').set(profile);
+      db.ref('user/' + uid + '/shopData').set(newShop);
+      db.ref('user/' + uid + '/shopData/time').set(timeShop);
+      console.log('Your account has been created!');
+      console.log(uid);
+
+      const payload = {
+        email: user.email,
+      };
+      var token = jwt.sign(payload, config.secret, {
+        expiresIn: 86400 // expires in 24 hours
       });
+
+      res.json({
+        success: true,
+        message: 'Your accound has been created!',
+        token: token,
+        name: form.username
+      });
+    },
+    error => {
+      var errorCode = error.code;
+      var errorMsg = error.message;
+      if (errorCode == 'auth/weak-password') {
+        res.json({
+          success: false,
+          message: 'The password is too weak',
+        });
+      } else {
+        res.json({
+          success: false,
+          message: errorMsg,
+        });
+      }
+    }
+  );
+});
+app.use(function (req, res, next) {
+  var token = req.body.token || req.query.token || req.headers['x-access-token']
+  if (token) {
+    jwt.verify(token, config.secret, function (err, decoded) {
+      if (err) {
+        return res.json({
+          success: false,
+          message: 'Invalid token.'
+        });
+      } else {
+        req.decoded = decoded;
+        next();
+      }
     });
+  } else {
+    res.status(403).send({
+      success: false,
+      message: 'No token provided.'
+    });
+  }
 });
 app.post('/login', function (req, res) {
   firebase.auth().signInWithEmailAndPassword(req.body.email, req.body.password)
     .then(function (userRecord) {
       console.log("Log in by", userRecord.uid);
-      firebase.auth().onAuthStateChanged(function(user) {
+      firebase.auth().onAuthStateChanged(function (user) {
         if (user) {
-          user.getIdToken().then(function(data) {
+          user.getIdToken().then(function (data) {
             return res.json({
               success: true,
               message: 'Log in success!',
@@ -113,7 +172,7 @@ app.post('/login', function (req, res) {
                 email: userRecord.email
               }
             });
-           // console.log(data);
+            // console.log(data);
           });
         }
       });
@@ -130,7 +189,7 @@ app.post('/login', function (req, res) {
       var errorCode = error.code;
       var errorMessage = error.message;
 
-      if ( errorCode === 'auth/user-not-found' ) {
+      if (errorCode === 'auth/user-not-found') {
         res.json({
           success: false,
           message: 'Authentication failed. User not found.'
