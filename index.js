@@ -80,6 +80,7 @@ app.post('/signup', function (req, res) {
     user => {
       var profile = {
         username: form.username,
+        email: form.email,
         phone: form.phone
       };
       var newShop = {
@@ -97,7 +98,8 @@ app.post('/signup', function (req, res) {
       };
 
       var uid = md5(form.email);
-      db.ref('uidStorage/').set(uid);
+     
+      db.ref('uidStorage/' + uid).set(form.username);
       db.ref('user/' + uid + '/profile').set(profile);
       db.ref('user/' + uid + '/shopData').set(newShop);
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
@@ -113,7 +115,7 @@ app.post('/signup', function (req, res) {
 
       res.json({
         success: true,
-        message: 'Your accound has been created!',
+        message: 'Your account has been created!',
         token: token,
         name: form.username
       });
@@ -135,6 +137,44 @@ app.post('/signup', function (req, res) {
     }
   );
 });
+
+app.post('/login', function (req, res) {
+  var form = req.body;
+  firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
+    const payload = {
+      email: userRecord.email,
+    };
+    var token = jwt.sign(payload, config.secret, {
+      expiresIn: 86400 // expires in 24 hours
+    })
+    res.json({
+      success: true,
+      message: 'Your account has been loged in!',
+      email: userRecord.email,
+      token: token,
+      uid: userRecord.uid
+    });
+  })
+    .catch(error => {
+      if (error.code === 'auth/wrong-password') {
+        res.json({
+          success: false,
+          message: 'Wrong password!'
+        });
+      } else if (error.code === 'auth/user-not-found') {
+        res.json({
+          success: false,
+          message: 'User not found!'
+        });
+      } else {
+        res.json({
+          success: false,
+          message: error.message
+        });
+      }
+    });
+});
+
 app.use(function (req, res, next) {
   var token = req.body.token || req.query.token || req.headers['x-access-token']
   if (token) {
@@ -156,62 +196,7 @@ app.use(function (req, res, next) {
     });
   }
 });
-app.post('/login', function (req, res) {
-  firebase.auth().signInWithEmailAndPassword(req.body.email, req.body.password)
-    .then(function (userRecord) {
-      console.log("Log in by", userRecord.uid);
-      firebase.auth().onAuthStateChanged(function (user) {
-        if (user) {
-          user.getIdToken().then(function (data) {
-            return res.json({
-              success: true,
-              message: 'Log in success!',
-              token: data,
-              user: {
-                uid: userRecord.uid,
-                email: userRecord.email
-              }
-            });
-            // console.log(data);
-          });
-        }
-      });
-      /*return res.json({
-        success: true,
-        message: 'Log in success!',
-        user: {
-          uid: userRecord.uid,
-          email: userRecord.email
-        }
-      });*/
-    })
-    .catch(function (error) {
-      var errorCode = error.code;
-      var errorMessage = error.message;
 
-      if (errorCode === 'auth/user-not-found') {
-        res.json({
-          success: false,
-          message: 'Authentication failed. User not found.'
-        });
-      }
-      else if (errorCode === 'auth/wrong-password') {
-        res.json({
-          success: false,
-          message: 'Wrong password.'
-        });
-      } else {
-        res.json({
-          success: false,
-          message: errorMessage
-        });
-      }
-      console.log(error);
-
-      //throw error;
-    });
-
-});
 app.listen(port, hostname, () => {
   console.log('UrQ API started at http://localhost:' + port);
 });
