@@ -3,6 +3,8 @@ var bodyParser = require('body-parser');
 var path = require('path');
 var app = express();
 var cors = require('cors');
+var fetch = require('node-fetch');
+
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
@@ -37,42 +39,17 @@ app.get('/user', function (req, res) {
   data.once("value", function (snapshot) {
     res.json(snapshot);
   });
-
-});
-app.get('create/:uid', function (req, res) {
-  var uid = req.body.uid;
-  admin.auth().getUser(uid)
-    .then(function (userRecord) {
-      // See the UserRecord reference doc for the contents of userRecord.
-      console.log("Successfully fetched user data:", userRecord.toJSON());
-    })
-    .catch(function (error) {
-      console.log("Error fetching user data:", error);
-    });
 });
 
-app.get('/alluser', function (req, res) {
-  function listAllUsers(nextPageToken) {
-    // List batch of users, 1000 at a time.
-    admin.auth().listUsers(1000, nextPageToken)
-      .then(function (listUsersResult) {
-        listUsersResult.users.forEach(function (userRecord) {
-          console.log("user", userRecord.toJSON());
-        });
-        //res.json(listUsersResult);
-        if (listUsersResult.pageToken) {
-          // List next batch of users.
-          listAllUsers(listUsersResult.pageToken);
-        }
-      })
-      .catch(function (error) {
-        console.log("Error listing users:", error);
-        res.json(error);
-      });
-  }
-  // Start listing users from the beginning, 1000 at a time.
-  listAllUsers();
-  res.json("success");
+app.get('/user/:uid', function (req, res) {
+  
+  var uid = req.params.uid;
+  var user = db.ref('user/' + uid);
+  console.log(uid);
+
+  user.once("value", function (snapshot) {
+    res.json(snapshot);
+  });
 });
 
 app.post('/signup', function (req, res) {
@@ -97,9 +74,9 @@ app.post('/signup', function (req, res) {
         close: form.close,
         reserve: form.reserve
       };
+      var uid = firebase.auth().currentUser.uid;
+     // var uid = md5(form.email);
 
-      var uid = md5(form.email);
-     
       db.ref('uidStorage/' + uid).set(form.username);
       db.ref('user/' + uid + '/profile').set(profile);
       db.ref('user/' + uid + '/shopData').set(newShop);
@@ -107,17 +84,17 @@ app.post('/signup', function (req, res) {
       console.log('Your account has been created!');
       console.log(uid);
 
-      const payload = {
+    /*  const payload = {
         email: user.email,
       };
       var token = jwt.sign(payload, config.secret, {
         expiresIn: 86400 // expires in 24 hours
-      });
+      });*/
 
       res.json({
         success: true,
         message: 'Your account has been created!',
-        token: token,
+        //token: token,
         name: form.username,
         uid: uid
       });
@@ -143,18 +120,22 @@ app.post('/signup', function (req, res) {
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
-    const payload = {
+    console.log('User authentication successful');
+    console.log(userRecord.email);
+    var uuid = firebase.auth().currentUser.uid;
+   /* const payload = {
       email: userRecord.email,
     };
     var token = jwt.sign(payload, config.secret, {
       expiresIn: 86400 // expires in 24 hours
-    })
+    });*/
     res.json({
       success: true,
       message: 'Your account has been loged in!',
       email: userRecord.email,
-      token: token,
-      uid: userRecord.uid
+      //token: token,
+      uid: userRecord.uid,
+      uuid:uuid
     });
   })
     .catch(error => {
@@ -176,7 +157,7 @@ app.post('/login', function (req, res) {
       }
     });
 });
-
+/*
 app.use(function (req, res, next) {
   var token = req.body.token || req.query.token || req.headers['x-access-token']
   if (token) {
@@ -197,7 +178,9 @@ app.use(function (req, res, next) {
       message: 'No token provided.'
     });
   }
-});
+});*/
+
+
 
 app.listen(port, hostname, () => {
   console.log('UrQ API started at http://localhost:' + port);

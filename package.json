@@ -24,6 +24,7 @@
     "firebase": "^4.9.1",
     "firebase-admin": "^5.8.2",
     "jsonwebtoken": "^8.2.0",
-    "md5": "^2.2.1"
+    "md5": "^2.2.1",
+    "node-fetch": "^2.1.2"
   }
 }
