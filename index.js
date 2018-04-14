@@ -83,6 +83,7 @@ app.post('/signup', function (req, res) {
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
       console.log('Your account has been created!');
       console.log(uid);
+      
 
     /*  const payload = {
         email: user.email,
@@ -116,7 +117,47 @@ app.post('/signup', function (req, res) {
     }
   );
 });
+app.post('/user/addq/:uid',function(req,res){
+  var form = req.body;
+  var uid = req.params.uid;
+  var user = db.ref('user/' + uid);
+  var qNum =  db.ref('qNumber/');
+  var rand = Math.floor(1000 + Math.random() * 9000);
+  var pin = rand.toString();
+  var count;
+  var q = {
+    nameCustomer: form.nameCustomer,
+    noCustomer: form.noCustomer,
+    pin: pin,
+    //repeat: form.repeat,
+    //status: form.status
+  };
+  /*var time = {
+    timeIn: form.timeIn,
+    timeOut: form.timeOut
+  };*/
+  //
+  //db.ref('qNumber/'+ form.count + '/time').set(time);
+  //db.ref('uidStorage/' + uid ).set(q);
 
+  qNum.once("value", function(snapshot) {
+    count = snapshot.numChildren();
+    console.log("There are "+ count +" messages");
+    count++;
+    //db.ref('qNumber/').set(count);
+    db.ref('qNumber/'+ count).set(q);
+  });
+  //console.log(count);
+ // 
+
+  res.json({
+    success: true,
+    nameCustomer: q.nameCustomer,
+    noCustomer: q.noCustomer,
+    uid: uid,
+    pin: q.pin
+  });
+});
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
@@ -157,6 +198,8 @@ app.post('/login', function (req, res) {
       }
     });
 });
+
+
 /*
 app.use(function (req, res, next) {
   var token = req.body.token || req.query.token || req.headers['x-access-token']
