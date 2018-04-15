@@ -42,7 +42,7 @@ app.get('/user', function (req, res) {
 });
 
 app.get('/user/:uid', function (req, res) {
-  
+
   var uid = req.params.uid;
   var user = db.ref('user/' + uid);
   console.log(uid);
@@ -75,7 +75,7 @@ app.post('/signup', function (req, res) {
         reserve: form.reserve
       };
       var uid = firebase.auth().currentUser.uid;
-     // var uid = md5(form.email);
+      // var uid = md5(form.email);
 
       db.ref('uidStorage/' + uid).set(form.username);
       db.ref('user/' + uid + '/profile').set(profile);
@@ -83,14 +83,14 @@ app.post('/signup', function (req, res) {
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
       console.log('Your account has been created!');
       console.log(uid);
-      
 
-    /*  const payload = {
-        email: user.email,
-      };
-      var token = jwt.sign(payload, config.secret, {
-        expiresIn: 86400 // expires in 24 hours
-      });*/
+
+      /*  const payload = {
+          email: user.email,
+        };
+        var token = jwt.sign(payload, config.secret, {
+          expiresIn: 86400 // expires in 24 hours
+        });*/
 
       res.json({
         success: true,
@@ -117,29 +117,29 @@ app.post('/signup', function (req, res) {
     }
   );
 });
-app.get('/user/addq/:uid',function(req,res){
+app.get('/user/addq/:uid', function (req, res) {
   var uid = req.params.uid;
   var count;
-  var qNum =  db.ref('user/' + uid + '/qNumber');
-  
+  var qNum = db.ref('user/' + uid + '/qNumber');
+
   console.log(uid);
 
   qNum.once("value", function (snapshot) {
     count = snapshot.numChildren();
-    var qCount = db.ref('user/'+ uid + '/qNumber/' + count);
-    qCount.once("value",function(snapshot){
+    var qCount = db.ref('user/' + uid + '/qNumber/' + count);
+    qCount.once("value", function (snapshot) {
       res.json(snapshot);
     });
   });
 });
-app.post('/user/addq/:uid',function(req,res){
+app.post('/user/addq/:uid', function (req, res) {
   var form = req.body;
   var uid = req.params.uid;
-  var qNum =  db.ref('user/' + uid + '/qNumber');
+  var qNum = db.ref('user/' + uid + '/qNumber');
   var rand = Math.floor(1000 + Math.random() * 9000);
   var pin = rand.toString();
   var count;
-  
+
   /*var time = {
     timeIn: form.timeIn,
     timeOut: form.timeOut
@@ -148,33 +148,49 @@ app.post('/user/addq/:uid',function(req,res){
   //db.ref('qNumber/'+ form.count + '/time').set(time);
   //db.ref('uidStorage/' + uid ).set(q);
 
-  qNum.once("value", function(snapshot) {
+  qNum.once("value", function (snapshot) {
     count = snapshot.numChildren();
-    console.log("There are "+ count +" queues");
+    console.log("There are " + count + " queues");
     count++;
     var q = {
-      id:count,
+      id: count,
       nameCustomer: form.nameCustomer,
       noCustomer: form.noCustomer,
       pin: pin
       //repeat: form.repeat,
       //status: form.status
     };
-    db.ref('user/' + uid + '/qNumber/'+ count).set(q);
+    db.ref('user/' + uid + '/qNumber/' + count).set(q);
     res.json({
       success: true,
       nameCustomer: q.nameCustomer,
       noCustomer: q.noCustomer,
       uid: uid,
       pin: q.pin,
-      count:count
+      count: count
     });
   });
-  
 });
-app.delete('/user/reset/:uid',function(req,res){
+app.put('/user/callq/:uid/:id', function (req, res) {
+  var form = req.body;
   var uid = req.params.uid;
-  var qNum =  db.ref('user/' + uid + '/qNumber');
+  var id = req.params.id;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  
+  db.ref('user/' + uid + '/qNumber/' + id).update({
+    repeat: "1"
+  });
+  res.json({
+    success: true,
+    message:'Call Repeat!',
+    uid: uid,
+    id: id
+  });
+
+});
+app.delete('/user/reset/:uid', function (req, res) {
+  var uid = req.params.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
   qNum.remove();
   res.json({
     success: true,
@@ -185,24 +201,24 @@ app.delete('/user/reset/:uid',function(req,res){
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
-    console.log('User authentication successful');
-    console.log(userRecord.email);
-    var uuid = firebase.auth().currentUser.uid;
-   /* const payload = {
-      email: userRecord.email,
-    };
-    var token = jwt.sign(payload, config.secret, {
-      expiresIn: 86400 // expires in 24 hours
-    });*/
-    res.json({
-      success: true,
-      message: 'Your account has been loged in!',
-      email: userRecord.email,
-      //token: token,
-      uid: userRecord.uid,
-      uuid:uuid
-    });
-  })
+      console.log('User authentication successful');
+      console.log(userRecord.email);
+      var uuid = firebase.auth().currentUser.uid;
+      /* const payload = {
+         email: userRecord.email,
+       };
+       var token = jwt.sign(payload, config.secret, {
+         expiresIn: 86400 // expires in 24 hours
+       });*/
+      res.json({
+        success: true,
+        message: 'Your account has been loged in!',
+        email: userRecord.email,
+        //token: token,
+        uid: userRecord.uid,
+        uuid: uuid
+      });
+    })
     .catch(error => {
       if (error.code === 'auth/wrong-password') {
         res.json({
