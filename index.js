@@ -222,6 +222,7 @@ app.put('/user/callq/:uid/:id', function (req, res) {
   });
 
 });
+
 app.delete('/user/reset/:uid', function (req, res) {
   var uid = req.params.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
@@ -236,7 +237,6 @@ app.delete('/user/reset/:uid', function (req, res) {
 app.put('/nextq/:uid/:id', function (req, res) {
   //var form = req.body;
   var uid = req.params.uid;
-  var qNum = db.ref('user/' + uid + '/qNumber');
   var id = req.params.id; //////////id is next id./////////
   var dt = datetime.create();
   var formattedDate = dt.format('H:M');
@@ -254,10 +254,10 @@ app.put('/nextq/:uid/:id', function (req, res) {
     id: id
   });
 });
+
 app.put('/finishq/:uid/:id', function (req, res) {
   //var form = req.body;
   var uid = req.params.uid;
-  var qNum = db.ref('user/' + uid + '/qNumber');
   var id = req.params.id; //////////id from calculate id finish compare #server/////////
   var dt = datetime.create();
   var formattedDate = dt.format('H:M');
@@ -276,6 +276,20 @@ app.put('/finishq/:uid/:id', function (req, res) {
     id: id
   });
 });
+
+app.put('/reserve/online/:uid', function (req, res) {
+  var form = req.body;
+  var uid = req.params.uid;
+  
+  db.ref('user/' + uid + '/shopData/time').update({reserve: form.reserve});
+  
+  res.json({
+    success: true,
+    message: 'Reserve Online!',
+    uid: uid
+  });
+});
+
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
@@ -316,6 +330,7 @@ app.post('/login', function (req, res) {
       }
     });
 });
+
 app.get('/signout', function (req, res) {
   var uuid = firebase.auth().currentUser.uid;
   firebase.auth().signOut().then(function () {
