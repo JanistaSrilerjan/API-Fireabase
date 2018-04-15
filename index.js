@@ -268,6 +268,18 @@ app.post('/login', function (req, res) {
       }
     });
 });
+app.get('/signout',function(req,res){
+  var uuid = firebase.auth().currentUser.uid;
+  firebase.auth().signOut().then(function() {
+    res.json({
+      success: true,
+      message: 'Signed Out',
+      uid: uuid
+    });
+  }, function(error) {
+    console.error('Sign Out Error', error);
+  });
+});
 
 
 /*
