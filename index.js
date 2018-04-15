@@ -4,6 +4,7 @@ var path = require('path');
 var app = express();
 var cors = require('cors');
 var fetch = require('node-fetch');
+var datetime = require('node-datetime');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -117,6 +118,7 @@ app.post('/signup', function (req, res) {
     }
   );
 });
+
 app.put('/profile/:uid', function (req, res) {
   var uid = req.params.uid;
   var form = req.body;
@@ -146,6 +148,7 @@ app.put('/profile/:uid', function (req, res) {
     uid: uid
   });
 });
+
 app.get('/user/addq/:uid', function (req, res) {
   var uid = req.params.uid;
   var count;
@@ -185,9 +188,8 @@ app.post('/user/addq/:uid', function (req, res) {
       id: count,
       nameCustomer: form.nameCustomer,
       noCustomer: form.noCustomer,
-      pin: pin
-      //repeat: form.repeat,
-      //status: form.status
+      pin: pin,
+      status: "q"
     };
     db.ref('user/' + uid + '/qNumber/' + count).set(q);
     res.json({
@@ -196,7 +198,8 @@ app.post('/user/addq/:uid', function (req, res) {
       noCustomer: q.noCustomer,
       uid: uid,
       pin: q.pin,
-      count: count
+      count: count,
+      status: status
     });
   });
 });
@@ -228,27 +231,71 @@ app.delete('/user/reset/:uid', function (req, res) {
     uid: uid
   });
 });
+
+app.put('/nextq/:uid/:id', function (req, res) {
+  //var form = req.body;
+  var uid = req.params.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var id = req.params.id; //////////id is next id./////////
+  var dt = datetime.create();
+  var formattedDate = dt.format('H:M');
+  console.log(formattedDate);
+  var time = {
+    timeIn: formattedDate,
+  };
+  db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
+  db.ref('user/' + uid + '/qNumber/' + id).update({repeat: "1"});
+  db.ref('user/' + uid + '/qNumber/' + id).update({ status: "doing" });
+  res.json({
+    success: true,
+    message: 'Call Queue!',
+    uid: uid,
+    id: id
+  });
+});
+app.put('/finishq/:uid/:id', function (req, res) {
+  //var form = req.body;
+  var uid = req.params.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var id = req.params.id; //////////id from calculate id finish compare #server/////////
+  var dt = datetime.create();
+  var formattedDate = dt.format('H:M');
+  console.log(formattedDate);
+  var time = {
+    timeOut: formattedDate
+  };
+
+  db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
+  db.ref('user/' + uid + '/qNumber/' + id).update({ status: "finish" });
+  
+  res.json({
+    success: true,
+    message: 'Finish Queue!',
+    uid: uid,
+    id: id
+  });
+});
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
-      console.log('User authentication successful');
-      console.log(userRecord.email);
-      var uuid = firebase.auth().currentUser.uid;
-      /* const payload = {
-         email: userRecord.email,
-       };
-       var token = jwt.sign(payload, config.secret, {
-         expiresIn: 86400 // expires in 24 hours
-       });*/
-      res.json({
-        success: true,
-        message: 'Your account has been loged in!',
-        email: userRecord.email,
-        //token: token,
-        uid: userRecord.uid,
-        uuid: uuid
-      });
-    })
+    console.log('User authentication successful');
+    console.log(userRecord.email);
+    var uuid = firebase.auth().currentUser.uid;
+    /* const payload = {
+       email: userRecord.email,
+     };
+     var token = jwt.sign(payload, config.secret, {
+       expiresIn: 86400 // expires in 24 hours
+     });*/
+    res.json({
+      success: true,
+      message: 'Your account has been loged in!',
+      email: userRecord.email,
+      //token: token,
+      uid: userRecord.uid,
+      uuid: uuid
+    });
+  })
     .catch(error => {
       if (error.code === 'auth/wrong-password') {
         res.json({
@@ -268,15 +315,15 @@ app.post('/login', function (req, res) {
       }
     });
 });
-app.get('/signout',function(req,res){
+app.get('/signout', function (req, res) {
   var uuid = firebase.auth().currentUser.uid;
-  firebase.auth().signOut().then(function() {
+  firebase.auth().signOut().then(function () {
     res.json({
       success: true,
       message: 'Signed Out',
       uid: uuid
     });
-  }, function(error) {
+  }, function (error) {
     console.error('Sign Out Error', error);
   });
 });
