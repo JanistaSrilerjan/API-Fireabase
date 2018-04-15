@@ -117,6 +117,35 @@ app.post('/signup', function (req, res) {
     }
   );
 });
+app.put('/profile/:uid', function (req, res) {
+  var uid = req.params.uid;
+  var form = req.body;
+
+  var profile = {
+    phone: form.phone
+  };
+  var newShop = {
+    qType: form.qType,
+    serviceType: form.serviceType,
+    avgServiceTime: form.avgServiceTime,
+    numServer: form.numServer
+  };
+  var timeShop = {
+    open: form.open,
+    close: form.close
+  };
+
+  db.ref('user/' + uid + '/profile').update(profile);
+  db.ref('user/' + uid + '/shopData').update(newShop);
+  db.ref('user/' + uid + '/shopData/time').update(timeShop);
+
+  res.json({
+    success: true,
+    message: 'Your profile has been updated!',
+    //token: token,
+    uid: uid
+  });
+});
 app.get('/user/addq/:uid', function (req, res) {
   var uid = req.params.uid;
   var count;
@@ -171,18 +200,19 @@ app.post('/user/addq/:uid', function (req, res) {
     });
   });
 });
+
 app.put('/user/callq/:uid/:id', function (req, res) {
   var form = req.body;
   var uid = req.params.uid;
   var id = req.params.id;
   var qNum = db.ref('user/' + uid + '/qNumber');
-  
+
   db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
   });
   res.json({
     success: true,
-    message:'Call Repeat!',
+    message: 'Call Repeat!',
     uid: uid,
     id: id
   });
