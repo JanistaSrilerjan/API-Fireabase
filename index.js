@@ -73,7 +73,7 @@ app.post('/signup', function (req, res) {
       var timeShop = {
         open: form.open,
         close: form.close,
-        reserve: form.reserve
+        reserve: form.open
       };
       var uid = firebase.auth().currentUser.uid;
       // var uid = md5(form.email);
@@ -164,6 +164,7 @@ app.get('/user/addq/:uid', function (req, res) {
     });
   });
 });
+
 app.post('/user/addq/:uid', function (req, res) {
   var form = req.body;
   var uid = req.params.uid;
