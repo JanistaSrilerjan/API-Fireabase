@@ -173,14 +173,6 @@ app.post('/user/addq/:uid', function (req, res) {
   var pin = rand.toString();
   var count;
 
-  /*var time = {
-    timeIn: form.timeIn,
-    timeOut: form.timeOut
-  };*/
-  //
-  //db.ref('qNumber/'+ form.count + '/time').set(time);
-  //db.ref('uidStorage/' + uid ).set(q);
-
   qNum.once("value", function (snapshot) {
     count = snapshot.numChildren();
     console.log("There are " + count + " queues");
@@ -235,7 +227,6 @@ app.delete('/user/reset/:uid', function (req, res) {
 });
 
 app.put('/nextq/:uid/:id', function (req, res) {
-  //var form = req.body;
   var uid = req.params.uid;
   var id = req.params.id; //////////id is next id./////////
   var dt = datetime.create();
@@ -245,7 +236,7 @@ app.put('/nextq/:uid/:id', function (req, res) {
     timeIn: formattedDate,
   };
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
-  db.ref('user/' + uid + '/qNumber/' + id).update({repeat: "1"});
+  db.ref('user/' + uid + '/qNumber/' + id).update({ repeat: "1" });
   db.ref('user/' + uid + '/qNumber/' + id).update({ status: "doing" });
   res.json({
     success: true,
@@ -256,7 +247,6 @@ app.put('/nextq/:uid/:id', function (req, res) {
 });
 
 app.put('/finishq/:uid/:id', function (req, res) {
-  //var form = req.body;
   var uid = req.params.uid;
   var id = req.params.id; //////////id from calculate id finish compare #server/////////
   var dt = datetime.create();
@@ -268,7 +258,7 @@ app.put('/finishq/:uid/:id', function (req, res) {
 
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
   db.ref('user/' + uid + '/qNumber/' + id).update({ status: "finish" });
-  
+
   res.json({
     success: true,
     message: 'Finish Queue!',
@@ -280,9 +270,9 @@ app.put('/finishq/:uid/:id', function (req, res) {
 app.put('/reserve/online/:uid', function (req, res) {
   var form = req.body;
   var uid = req.params.uid;
-  
-  db.ref('user/' + uid + '/shopData/time').update({reserve: form.reserve});
-  
+
+  db.ref('user/' + uid + '/shopData/time').update({ reserve: form.reserve });
+
   res.json({
     success: true,
     message: 'Reserve Online!',
@@ -344,7 +334,6 @@ app.get('/signout', function (req, res) {
   });
 });
 
-
 /*
 app.use(function (req, res, next) {
   var token = req.body.token || req.query.token || req.headers['x-access-token']
@@ -367,8 +356,6 @@ app.use(function (req, res, next) {
     });
   }
 });*/
-
-
 
 app.listen(port, hostname, () => {
   console.log('UrQ API started at http://localhost:' + port);
