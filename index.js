@@ -117,21 +117,29 @@ app.post('/signup', function (req, res) {
     }
   );
 });
+app.get('/user/addq/:uid',function(req,res){
+  var uid = req.params.uid;
+  var count;
+  var qNum =  db.ref('user/' + uid + '/qNumber');
+  
+  console.log(uid);
+
+  qNum.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    var qCount = db.ref('user/'+ uid + '/qNumber/' + count);
+    qCount.once("value",function(snapshot){
+      res.json(snapshot);
+    });
+  });
+});
 app.post('/user/addq/:uid',function(req,res){
   var form = req.body;
   var uid = req.params.uid;
-  var user = db.ref('user/' + uid);
-  var qNum =  db.ref('qNumber/');
+  var qNum =  db.ref('user/' + uid + '/qNumber');
   var rand = Math.floor(1000 + Math.random() * 9000);
   var pin = rand.toString();
   var count;
-  var q = {
-    nameCustomer: form.nameCustomer,
-    noCustomer: form.noCustomer,
-    pin: pin,
-    //repeat: form.repeat,
-    //status: form.status
-  };
+  
   /*var time = {
     timeIn: form.timeIn,
     timeOut: form.timeOut
@@ -142,20 +150,36 @@ app.post('/user/addq/:uid',function(req,res){
 
   qNum.once("value", function(snapshot) {
     count = snapshot.numChildren();
-    console.log("There are "+ count +" messages");
+    console.log("There are "+ count +" queues");
     count++;
-    //db.ref('qNumber/').set(count);
-    db.ref('qNumber/'+ count).set(q);
+    var q = {
+      id:count,
+      nameCustomer: form.nameCustomer,
+      noCustomer: form.noCustomer,
+      pin: pin
+      //repeat: form.repeat,
+      //status: form.status
+    };
+    db.ref('user/' + uid + '/qNumber/'+ count).set(q);
+    res.json({
+      success: true,
+      nameCustomer: q.nameCustomer,
+      noCustomer: q.noCustomer,
+      uid: uid,
+      pin: q.pin,
+      count:count
+    });
   });
-  //console.log(count);
- // 
-
+  
+});
+app.delete('/user/reset/:uid',function(req,res){
+  var uid = req.params.uid;
+  var qNum =  db.ref('user/' + uid + '/qNumber');
+  qNum.remove();
   res.json({
     success: true,
-    nameCustomer: q.nameCustomer,
-    noCustomer: q.noCustomer,
-    uid: uid,
-    pin: q.pin
+    message: 'Reset Complete!',
+    uid: uid
   });
 });
 app.post('/login', function (req, res) {
