@@ -44,7 +44,7 @@ app.get('/user', function (req, res) {
 
 app.get('/user/profile', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
- // var uid = req.params.uid;
+  // var uid = req.params.uid;
   var user = db.ref('user/' + uid);
   console.log(uid);
 
@@ -73,7 +73,11 @@ app.post('/signup', function (req, res) {
       var timeShop = {
         open: form.open,
         close: form.close,
-        reserve: form.open
+      };
+      var reserveOnline = {
+        res_status: "0",
+        res_op: form.open,
+        res_cl: form.close
       };
       var uid = firebase.auth().currentUser.uid;
       // var uid = md5(form.email);
@@ -82,6 +86,7 @@ app.post('/signup', function (req, res) {
       db.ref('user/' + uid + '/profile').set(profile);
       db.ref('user/' + uid + '/shopData').set(newShop);
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
+      db.ref('user/' + uid + '/shopData/reserve').set(reserveOnline);
       console.log('Your account has been created!');
       console.log(uid);
 
@@ -242,8 +247,12 @@ app.put('/nextq/:id', function (req, res) {
     timeIn: formattedDate,
   };
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
-  db.ref('user/' + uid + '/qNumber/' + id).update({ repeat: "1" });
-  db.ref('user/' + uid + '/qNumber/' + id).update({ status: "doing" });
+  db.ref('user/' + uid + '/qNumber/' + id).update({
+    repeat: "1"
+  });
+  db.ref('user/' + uid + '/qNumber/' + id).update({
+    status: "doing"
+  });
   res.json({
     success: true,
     message: 'Call Queue!',
@@ -264,7 +273,9 @@ app.put('/finishq/:id', function (req, res) {
   };
 
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
-  db.ref('user/' + uid + '/qNumber/' + id).update({ status: "finish" });
+  db.ref('user/' + uid + '/qNumber/' + id).update({
+    status: "finish"
+  });
 
   res.json({
     success: true,
@@ -276,10 +287,13 @@ app.put('/finishq/:id', function (req, res) {
 
 app.put('/reserve/online', function (req, res) {
   var form = req.body;
-  //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
-
-  db.ref('user/' + uid + '/shopData/time').update({ reserve: form.reserve });
+  var reserveOnline = {
+    res_status: form.res_status,
+    res_op: form.res_op,
+    res_cl: form.res_cl
+  }
+  db.ref('user/' + uid + '/shopData/reserve').update(reserveOnline);
 
   res.json({
     success: true,
@@ -291,24 +305,24 @@ app.put('/reserve/online', function (req, res) {
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
-    console.log('User authentication successful');
-    console.log(userRecord.email);
-    var uuid = firebase.auth().currentUser.uid;
-    /* const payload = {
-       email: userRecord.email,
-     };
-     var token = jwt.sign(payload, config.secret, {
-       expiresIn: 86400 // expires in 24 hours
-     });*/
-    res.json({
-      success: true,
-      message: 'Your account has been loged in!',
-      email: userRecord.email,
-      //token: token,
-      uid: userRecord.uid,
-      uuid: uuid
-    });
-  })
+      console.log('User authentication successful');
+      console.log(userRecord.email);
+      var uuid = firebase.auth().currentUser.uid;
+      /* const payload = {
+         email: userRecord.email,
+       };
+       var token = jwt.sign(payload, config.secret, {
+         expiresIn: 86400 // expires in 24 hours
+       });*/
+      res.json({
+        success: true,
+        message: 'Your account has been loged in!',
+        email: userRecord.email,
+        //token: token,
+        uid: userRecord.uid,
+        uuid: uuid
+      });
+    })
     .catch(error => {
       if (error.code === 'auth/wrong-password') {
         res.json({
