@@ -42,9 +42,9 @@ app.get('/user', function (req, res) {
   });
 });
 
-app.get('/user/:uid', function (req, res) {
-
-  var uid = req.params.uid;
+app.get('/user/profile', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+ // var uid = req.params.uid;
   var user = db.ref('user/' + uid);
   console.log(uid);
 
@@ -119,8 +119,9 @@ app.post('/signup', function (req, res) {
   );
 });
 
-app.put('/profile/:uid', function (req, res) {
-  var uid = req.params.uid;
+app.put('/profile', function (req, res) {
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var form = req.body;
 
   var profile = {
@@ -149,8 +150,9 @@ app.put('/profile/:uid', function (req, res) {
   });
 });
 
-app.get('/user/addq/:uid', function (req, res) {
-  var uid = req.params.uid;
+app.get('/user/addq', function (req, res) {
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var count;
   var qNum = db.ref('user/' + uid + '/qNumber');
 
@@ -165,9 +167,10 @@ app.get('/user/addq/:uid', function (req, res) {
   });
 });
 
-app.post('/user/addq/:uid', function (req, res) {
+app.post('/user/addq', function (req, res) {
   var form = req.body;
-  var uid = req.params.uid;
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
   var rand = Math.floor(1000 + Math.random() * 9000);
   var pin = rand.toString();
@@ -197,9 +200,10 @@ app.post('/user/addq/:uid', function (req, res) {
   });
 });
 
-app.put('/user/callq/:uid/:id', function (req, res) {
+app.put('/user/callq/:id', function (req, res) {
   var form = req.body;
-  var uid = req.params.uid;
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var id = req.params.id;
   var qNum = db.ref('user/' + uid + '/qNumber');
 
@@ -215,8 +219,9 @@ app.put('/user/callq/:uid/:id', function (req, res) {
 
 });
 
-app.delete('/user/reset/:uid', function (req, res) {
-  var uid = req.params.uid;
+app.delete('/user/reset', function (req, res) {
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
   qNum.remove();
   res.json({
@@ -226,8 +231,9 @@ app.delete('/user/reset/:uid', function (req, res) {
   });
 });
 
-app.put('/nextq/:uid/:id', function (req, res) {
-  var uid = req.params.uid;
+app.put('/nextq/:id', function (req, res) {
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var id = req.params.id; //////////id is next id./////////
   var dt = datetime.create();
   var formattedDate = dt.format('H:M');
@@ -246,8 +252,9 @@ app.put('/nextq/:uid/:id', function (req, res) {
   });
 });
 
-app.put('/finishq/:uid/:id', function (req, res) {
-  var uid = req.params.uid;
+app.put('/finishq/:id', function (req, res) {
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
   var id = req.params.id; //////////id from calculate id finish compare #server/////////
   var dt = datetime.create();
   var formattedDate = dt.format('H:M');
@@ -267,9 +274,10 @@ app.put('/finishq/:uid/:id', function (req, res) {
   });
 });
 
-app.put('/reserve/online/:uid', function (req, res) {
+app.put('/reserve/online', function (req, res) {
   var form = req.body;
-  var uid = req.params.uid;
+  //var uid = req.params.uid;
+  var uid = firebase.auth().currentUser.uid;
 
   db.ref('user/' + uid + '/shopData/time').update({ reserve: form.reserve });
 
