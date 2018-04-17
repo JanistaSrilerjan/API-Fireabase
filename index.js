@@ -75,9 +75,9 @@ app.post('/signup', function (req, res) {
         close: form.close,
       };
       var reserveOnline = {
-        res_status: "0",
-        res_op: form.open,
-        res_cl: form.close
+        reserveStatus: "0",
+        reserveOpen: form.open,
+        reserveClose: form.close
       };
       var uid = firebase.auth().currentUser.uid;
       // var uid = md5(form.email);
@@ -289,10 +289,10 @@ app.put('/reserve/online', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
   var reserveOnline = {
-    res_status: form.res_status,
-    res_op: form.res_op,
-    res_cl: form.res_cl
-  }
+    reserveStatus: form.reserveStatus,
+    reserveOpen: form.reserveOpen,
+    reserveClose: form.reserveClose
+  };
   db.ref('user/' + uid + '/shopData/reserve').update(reserveOnline);
 
   res.json({
