@@ -21,14 +21,14 @@ var admin = require('firebase-admin');
 const firebaseApp = firebase.initializeApp(config);
 var data = firebaseApp.database().ref();
 var db = firebase.database();
-var serviceAccount = require('./test-pj-92383-firebase-adminsdk-dmmav-668d0462ec.json');
+var serviceAccount = require('./urqproject-38bef-firebase-adminsdk-u2nkv-6a67f0ff04.json');
 
 var jwt = require('jsonwebtoken');
 var md5 = require('md5');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://test-pj-92383.firebaseio.com'
+  databaseURL: 'https://urqproject-38bef.firebaseio.com/'
 });
 
 app.get('/', function (req, res) {
@@ -200,7 +200,7 @@ app.post('/user/addq', function (req, res) {
       uid: uid,
       pin: q.pin,
       count: count,
-      status: status
+      status: q.status
     });
   });
 });

@@ -1,12 +1,11 @@
 module.exports = {
     'port': 2200,
     'hostname': 'localhost',
-    'apiKey': "AIzaSyDwEug5mgYJ8iVezIS6iD-x9aOf8AWoYQM",
-    'secret': 'urq-pj',
-    'authDomain': "test-pj-92383.firebaseapp.com",
-    'databaseURL': "https://test-pj-92383.firebaseio.com",
-    'projectId': "test-pj-92383",
-    'storageBucket': "test-pj-92383.appspot.com",
-    'messagingSenderId': "338999692751"
+    'apiKey': "AIzaSyAjMBhY296ZmgjXvKZ0WZrPthZ5kesB7C4",
+    'authDomain': "urqproject-38bef.firebaseapp.com",
+    'databaseURL': "https://urqproject-38bef.firebaseio.com",
+    'projectId': "urqproject-38bef",
+    'storageBucket': "urqproject-38bef.appspot.com",
+    'messagingSenderId': "363474285351"
     
 };
