@@ -200,7 +200,8 @@ app.post('/user/addq', function (req, res) {
       noCustomer: form.noCustomer,
       pin: pin,
       status: "q",
-      addType: "0"
+      addType: "0",
+      repeat:"0"
     };
     db.ref('user/' + uid + '/qNumber/' + count).set(q);
     res.json({
@@ -259,6 +260,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
       nameCustomer: "None",
       status: "doing",
       addType: "2",
+      repeat:"0",
       time : {
         timeIn: form.timeIn,
         timeOut: form.timeOut
@@ -379,7 +381,7 @@ app.get('/count/online', function (req, res) {
   });
 });
 
-app.put('/user/callq/:id', function (req, res) {
+app.put('/callq/:id', function (req, res) {
   var form = req.body;
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -478,9 +480,10 @@ app.put('/reserve/online', function (req, res) {
 app.put('/reserve/close', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
-  db.ref('user/' + uid + '/shopData/reserve').update({
+  var reserve = {
     reserveStatus: form.reserveStatus
-  });
+  }
+  db.ref('user/' + uid + '/shopData/reserve').update(reserve);
   res.json({
     success: true,
     message: 'Reserve Online is Close!',
