@@ -5,7 +5,7 @@ var app = express();
 var cors = require('cors');
 var fetch = require('node-fetch');
 var datetime = require('node-datetime');
-var mergeJSON = require("merge-json") ;
+var mergeJSON = require("merge-json");
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -156,6 +156,18 @@ app.put('/profile', function (req, res) {
   });
 });
 
+app.get('/count/q', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var count;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  qNum.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    res.json({
+      count: count
+    });
+  });
+});
+
 app.get('/user/addq', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -204,11 +216,92 @@ app.post('/user/addq', function (req, res) {
   });
 });
 
-app.get('/next',function(req,res){
+app.put('/call/now/:numq',function(req,res){
+  var uid = firebase.auth().currentUser.uid;
+  var numq = req.params.numq;
+  db.ref('user/' + uid + '/callNow').set(numq);
+  res.json({
+    success: true,
+    message:"Next q Now!",
+    numq: numq
+  });
+});
+
+app.get('/dataq/:id',function(req,res){
+  var id = req.params.id;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber/' + id);
+  qNum.once("value", function (snapshot) {
+    res.json(snapshot);
+  });
+});
+
+app.get('/call/now',function(req,res){
+  var uid = firebase.auth().currentUser.uid;
+  var state = db.ref('user/' + uid + '/callNow');
+  state.once("value", function (snapshot) {
+    res.json(snapshot);
+  });
+});
+
+app.post('/call/next/recent', function (req, res) { //call next q recently
+  var form = req.body;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var count;
+
+  qNum.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    console.log("There are " + count + " queues");
+    count++;
+    var q = {
+      id: count,
+      nameCustomer: "None",
+      status: "doing",
+      addType: "2",
+      time : {
+        timeIn: form.timeIn,
+        timeOut: form.timeOut
+      }
+    };
+    db.ref('user/' + uid + '/qNumber/' + count).set(q); 
+    
+    res.json({
+      success: true,
+      message:"call q out system",
+      nameCustomer: q.nameCustomer,
+      noCustomer: q.noCustomer,
+      uid: uid,
+      count: count,
+      status: q.status,
+      addType: "call_next_recently"
+    });
+  });
+});
+
+app.put('/call/next/:count', function (req, res) {
+  var form = req.body;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var count = req.params.count;
+  var q = {
+    status: "doing"
+  };
+  db.ref('user/' + uid + '/qNumber/' + count).update(q);
+  res.json({
+    success: true,
+    message:"call q in system",
+    count: count,
+    status: q.status
+  });
+
+});
+
+app.get('/next', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
-  Ref.orderByChild("status").equalTo("q").limitToFirst(1).on("child_added", function (snapshot) {
-   res.json(snapshot.val());
+  Ref.orderByChild("status").equalTo("q").limitToFirst(1).once("child_added", function (snapshot) {
+    res.json(snapshot.val());
   }, function (error) {
     res.json("Error: " + error.code);
   });
@@ -218,33 +311,33 @@ app.get('/walkin', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
   var json, jsons = [];
-  
+
   Ref.orderByChild("addType").equalTo("0").on("value", function (snapshot) {
-    snapshot.forEach(function(childSnapshot) {     
-     json = childSnapshot.val();
-      if ( json ) {
-        jsons.push( json );
-      }     
-   });
-   res.json(jsons);
+    snapshot.forEach(function (childSnapshot) {
+      json = childSnapshot.val();
+      if (json) {
+        jsons.push(json);
+      }
+    });
+    res.json(jsons);
   }, function (error) {
     res.json("Error: " + error.code);
   });
 });
 
-app.get('/count/walkin',function(req,res){
+app.get('/count/walkin', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
-  var count=0;
-  
+  var count = 0;
+
   Ref.orderByChild("addType").equalTo("0").on("value", function (snapshot) {
-    snapshot.forEach(function(childSnapshot) {     
-     count++;
-   });
-   res.json({
-    success: true,
-    count:count
-  });
+    snapshot.forEach(function (childSnapshot) {
+      count++;
+    });
+    res.json({
+      success: true,
+      count: count
+    });
   }, function (error) {
     res.json("Error: " + error.code);
   });
@@ -254,33 +347,33 @@ app.get('/online', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
   var json, jsons = [];
-  
+
   Ref.orderByChild("addType").equalTo("1").on("value", function (snapshot) {
-    snapshot.forEach(function(childSnapshot) {     
-     json = childSnapshot.val();
-      if ( json ) {
-        jsons.push( json );
-      }     
-   });
-   res.json(jsons);
+    snapshot.forEach(function (childSnapshot) {
+      json = childSnapshot.val();
+      if (json) {
+        jsons.push(json);
+      }
+    });
+    res.json(jsons);
   }, function (error) {
     res.json("Error: " + error.code);
   });
 });
 
-app.get('/count/online',function(req,res){
+app.get('/count/online', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
-  var count=0;
-  
+  var count = 0;
+
   Ref.orderByChild("addType").equalTo("1").on("value", function (snapshot) {
-    snapshot.forEach(function(childSnapshot) {     
-     count++;
-   });
-   res.json({
-    success: true,
-    count:count
-  });
+    snapshot.forEach(function (childSnapshot) {
+      count++;
+    });
+    res.json({
+      success: true,
+      count: count
+    });
   }, function (error) {
     res.json("Error: " + error.code);
   });
@@ -306,10 +399,12 @@ app.put('/user/callq/:id', function (req, res) {
 });
 
 app.delete('/user/reset', function (req, res) {
-  //var uid = req.params.uid;
+ 
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
+  var qCall = db.ref('user/' + uid + '/callNow');
   qNum.remove();
+  qCall.remove();
   res.json({
     success: true,
     message: 'Reset Complete!',
@@ -318,23 +413,19 @@ app.delete('/user/reset', function (req, res) {
 });
 
 app.put('/nextq/:id', function (req, res) {
-  //var uid = req.params.uid;
+
+  var form = req.body;
   var uid = firebase.auth().currentUser.uid;
   var id = req.params.id; //////////id is next id./////////
-  var dt = datetime.create();
-  var formattedDate = dt.format('H:M');
-  console.log(formattedDate);
+
   var time = {
-    timeIn: formattedDate,
+    timeIn: form.timeIn,
     timeOut: form.timeOut
   };
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
-  db.ref('user/' + uid + '/qNumber/' + id).update({
+  /*db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
-  });
-  db.ref('user/' + uid + '/qNumber/' + id).update({
-    status: "doing"
-  });
+  });*/
   res.json({
     success: true,
     message: 'Call Queue!',
@@ -383,10 +474,13 @@ app.put('/reserve/online', function (req, res) {
     uid: uid
   });
 });
+
 app.put('/reserve/close', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
-  db.ref('user/' + uid + '/shopData/reserve').update({ reserveStatus: form.reserveStatus });
+  db.ref('user/' + uid + '/shopData/reserve').update({
+    reserveStatus: form.reserveStatus
+  });
   res.json({
     success: true,
     message: 'Reserve Online is Close!',
@@ -396,24 +490,24 @@ app.put('/reserve/close', function (req, res) {
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
-    console.log('User authentication successful');
-    console.log(userRecord.email);
-    var uuid = firebase.auth().currentUser.uid;
-    /* const payload = {
-       email: userRecord.email,
-     };
-     var token = jwt.sign(payload, config.secret, {
-       expiresIn: 86400 // expires in 24 hours
-     });*/
-    res.json({
-      success: true,
-      message: 'Your account has been loged in!',
-      email: userRecord.email,
-      //token: token,
-      uid: userRecord.uid,
-      uuid: uuid
-    });
-  })
+      console.log('User authentication successful');
+      console.log(userRecord.email);
+      var uuid = firebase.auth().currentUser.uid;
+      /* const payload = {
+         email: userRecord.email,
+       };
+       var token = jwt.sign(payload, config.secret, {
+         expiresIn: 86400 // expires in 24 hours
+       });*/
+      res.json({
+        success: true,
+        message: 'Your account has been loged in!',
+        email: userRecord.email,
+        //token: token,
+        uid: userRecord.uid,
+        uuid: uuid
+      });
+    })
     .catch(error => {
       if (error.code === 'auth/wrong-password') {
         res.json({
