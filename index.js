@@ -88,6 +88,7 @@ app.post('/signup', function (req, res) {
       db.ref('user/' + uid + '/shopData').set(newShop);
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
       db.ref('user/' + uid + '/shopData/reserve').set(reserveOnline);
+      db.ref('user/' + uid + '/callNow').set("0");
       console.log('Your account has been created!');
       console.log(uid);
 
@@ -404,16 +405,23 @@ app.delete('/user/reset', function (req, res) {
  
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
-  var qCall = db.ref('user/' + uid + '/callNow');
   qNum.remove();
-  qCall.remove();
   res.json({
     success: true,
     message: 'Reset Complete!',
     uid: uid
   });
 });
-
+app.put('/user/reset', function (req, res) {
+ 
+  var uid = firebase.auth().currentUser.uid;
+  db.ref('user/' + uid + '/callNow').set("0");
+  res.json({
+    success: true,
+    message: 'Reset Complete!',
+    uid: uid
+  });
+});
 app.put('/nextq/:id', function (req, res) {
 
   var form = req.body;
@@ -440,14 +448,7 @@ app.put('/finishq/:id', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
   var id = req.params.id; //////////id from calculate id finish compare #server/////////
-  var dt = datetime.create();
-  var formattedDate = dt.format('H:M');
-  console.log(formattedDate);
-  var time = {
-    timeOut: formattedDate
-  };
 
-  db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
   db.ref('user/' + uid + '/qNumber/' + id).update({
     status: "finish"
   });
@@ -490,6 +491,7 @@ app.put('/reserve/close', function (req, res) {
     uid: uid
   });
 });
+
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
