@@ -114,7 +114,15 @@ app.post('/signup', function (req, res) {
       if (errorCode == 'auth/weak-password') {
         res.json({
           success: false,
+          type_error: 0,
           message: 'The password is too weak',
+        });
+      }
+      else if(errorCode == 'auth/email-already-in-use'){
+        res.json({
+          success: false,
+          type_error: 1,
+          message: 'This email is already in use by another accout.',
         });
       } else {
         res.json({
