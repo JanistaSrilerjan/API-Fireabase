@@ -517,11 +517,13 @@ app.post('/login', function (req, res) {
       if (error.code === 'auth/wrong-password') {
         res.json({
           success: false,
+          type_error: 0,
           message: 'Wrong password!'
         });
       } else if (error.code === 'auth/user-not-found') {
         res.json({
           success: false,
+          type_error: 1,
           message: 'User not found!'
         });
       } else {
