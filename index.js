@@ -469,6 +469,35 @@ app.put('/finishq/:id', function (req, res) {
   });
 });
 
+app.get('/doing', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var Ref = firebase.database().ref("user/" + uid + "/qNumber");
+  Ref.orderByChild("status").equalTo("doing").limitToFirst(1).once("child_added", function (snapshot) {
+    res.json(snapshot.val());
+  }, function (error) {
+    res.json("Error: " + error.code);
+  });
+});
+
+app.get('/count/doing', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var Ref = firebase.database().ref("user/" + uid + "/qNumber");
+  var count = 0;
+
+  Ref.orderByChild("status").equalTo("doing").once("value", function (snapshot) {
+    snapshot.forEach(function (childSnapshot) {
+      count++;
+    });
+    res.json({
+      success: true,
+      count: count
+    });
+    console.log(count);
+  }, function (error) {
+    res.json("Error: " + error.code);
+  });
+});
+
 app.put('/reserve/online', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
