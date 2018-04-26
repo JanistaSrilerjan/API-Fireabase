@@ -258,7 +258,7 @@ app.put('/call/now/:numq', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var numq = req.params.numq;
   db.ref('user/' + uid + '/callQ/callNow').set(numq);
-  res.json({
+  return res.json({
     success: true,
     message: "Next q Now!",
     numq: numq
@@ -348,7 +348,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
 
       db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
       db.ref('user/' + uid + '/qNumber/' + count).set(q);   
-      res.json({
+      return res.json({
         success: true,
         message: "call q out system",
         nameCustomer: q.nameCustomer,
@@ -360,7 +360,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
         doing:c
       });
     }, function (error) {
-      res.json("Error: " + error.code);
+      return res.json("Error: " + error.code);
     });
     
   });
