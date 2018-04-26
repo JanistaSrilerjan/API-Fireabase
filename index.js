@@ -80,6 +80,10 @@ app.post('/signup', function (req, res) {
         reserveOpen: form.open,
         reserveClose: form.close
       };
+      var call = {
+        callNow: "0",
+        callDefine: "0"
+      };
       var uid = firebase.auth().currentUser.uid;
       // var uid = md5(form.email);
 
@@ -88,7 +92,7 @@ app.post('/signup', function (req, res) {
       db.ref('user/' + uid + '/shopData').set(newShop);
       db.ref('user/' + uid + '/shopData/time').set(timeShop);
       db.ref('user/' + uid + '/shopData/reserve').set(reserveOnline);
-      db.ref('user/' + uid + '/callNow').set("0");
+      db.ref('user/' + uid + '/callQ').set(call);
       console.log('Your account has been created!');
       console.log(uid);
 
@@ -117,8 +121,7 @@ app.post('/signup', function (req, res) {
           type_error: 0,
           message: 'The password is too weak',
         });
-      }
-      else if(errorCode == 'auth/email-already-in-use'){
+      } else if (errorCode == 'auth/email-already-in-use') {
         res.json({
           success: false,
           type_error: 1,
@@ -177,6 +180,31 @@ app.get('/count/q', function (req, res) {
   });
 });
 
+app.get('/count/define', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var count;
+  var qNum = db.ref('user/' + uid + '/callQ/callDefine/');
+  qNum.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    res.json({
+      count: count
+    });
+  });
+});
+
+app.delete('/call/def/:id', function (req, res) {
+  var id = req.params.id;
+  var uid = firebase.auth().currentUser.uid;
+  var callQ = db.ref('user/' + uid + '/callQ/callDefine/' + id);
+
+  callQ.remove();
+  res.json({
+    success: true,
+    message: 'Delete Complete!',
+    uid: uid
+  });
+});
+
 app.get('/user/addq', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -210,7 +238,7 @@ app.post('/user/addq', function (req, res) {
       pin: pin,
       status: "q",
       addType: "0",
-      repeat:"0"
+      repeat: "0"
     };
     db.ref('user/' + uid + '/qNumber/' + count).set(q);
     res.json({
@@ -226,18 +254,18 @@ app.post('/user/addq', function (req, res) {
   });
 });
 
-app.put('/call/now/:numq',function(req,res){
+app.put('/call/now/:numq', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var numq = req.params.numq;
-  db.ref('user/' + uid + '/callNow').set(numq);
+  db.ref('user/' + uid + '/callQ/callNow').set(numq);
   res.json({
     success: true,
-    message:"Next q Now!",
+    message: "Next q Now!",
     numq: numq
   });
 });
 
-app.get('/dataq/:id',function(req,res){
+app.get('/dataq/:id', function (req, res) {
   var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber/' + id);
@@ -246,47 +274,89 @@ app.get('/dataq/:id',function(req,res){
   });
 });
 
-app.get('/call/now',function(req,res){
+app.get('/data/doing/', function (req, res) {
+  var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
-  var state = db.ref('user/' + uid + '/callNow');
+  var qNum = db.ref('user/' + uid + '/callQ/callDefine');
+  qNum.once("value", function (snapshot) {
+    res.json(snapshot);
+  });
+});
+
+app.get('/cdata/doing', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var Ref = db.ref("user/" + uid + '/callQ/callDefine');
+  var count;
+
+  Ref.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    res.json({
+      count: count
+    });
+  });
+});
+
+app.get('/call/now', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var state = db.ref('user/' + uid + '/callQ/callNow');
   state.once("value", function (snapshot) {
     res.json(snapshot);
   });
 });
 
+
 app.post('/call/next/recent', function (req, res) { //call next q recently
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
+  var Ref = db.ref("user/" + uid + "/qNumber");
+  //var Fin = db.ref('user/' + uid + '/callQ/willFinish');
+  var c = 0;
   var count;
 
+  
   qNum.once("value", function (snapshot) {
     count = snapshot.numChildren();
     console.log("There are " + count + " queues");
     count++;
-    var q = {
-      id: count,
-      nameCustomer: "None",
-      status: "doing",
-      addType: "2",
-      repeat:"0",
-      time : {
-        timeIn: form.timeIn,
-        timeOut: form.timeOut
-      }
-    };
-    db.ref('user/' + uid + '/qNumber/' + count).set(q); 
-    
-    res.json({
-      success: true,
-      message:"call q out system",
-      nameCustomer: q.nameCustomer,
-      noCustomer: q.noCustomer,
-      uid: uid,
-      count: count,
-      status: q.status,
-      addType: "call_next_recently"
+    Ref.orderByChild("status").equalTo("doing").once("value", function (snapshot) {
+      snapshot.forEach(function (childSnapshot) {
+        c++;
+      });
+      c++;
+      var q = {
+        id: count,
+        nameCustomer: "None",
+        status: "doing",
+        addType: "2",
+        repeat: "0",
+        time: {
+          timeIn: form.timeIn,
+          timeOut: form.timeOut
+        },
+        doing: c
+      }; 
+      var fin ={
+        id:count,
+        no:c
+      };
+      db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
+      db.ref('user/' + uid + '/qNumber/' + count).set(q);   
+      res.json({
+        success: true,
+        message: "call q out system",
+        nameCustomer: q.nameCustomer,
+        noCustomer: q.noCustomer,
+        uid: uid,
+        count: count,
+        status: q.status,
+        addType: "call_next_recently",
+        doing:c
+      });
+    }, function (error) {
+      res.json("Error: " + error.code);
     });
+    
   });
 });
 
@@ -294,16 +364,39 @@ app.put('/call/next/:count', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
+  var Ref = firebase.database().ref("user/" + uid + "/qNumber");
+  
   var count = req.params.count;
+  var c = 0;
+
   var q = {
     status: "doing"
   };
-  db.ref('user/' + uid + '/qNumber/' + count).update(q);
-  res.json({
-    success: true,
-    message:"call q in system",
-    count: count,
-    status: q.status
+
+  Ref.orderByChild("status").equalTo("doing").once("value", function (snapshot) {
+    snapshot.forEach(function (childSnapshot) {
+      c++;
+    });
+    c++;
+    db.ref('user/' + uid + '/qNumber/' + count).update({
+      doing: c
+    });
+    var fin={
+      id:count,
+      no:c
+    }
+    db.ref('user/' + uid + '/qNumber/' + count).update(q);
+    db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
+    res.json({
+      success: true,
+      message: "call q in system",
+      count: count,
+      status: q.status,
+      doing: c
+    });
+    console.log(count);
+  }, function (error) {
+    res.json("Error: " + error.code);
   });
 
 });
@@ -392,10 +485,8 @@ app.get('/count/online', function (req, res) {
 
 app.put('/callq/:id', function (req, res) {
   var form = req.body;
-  //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
   var id = req.params.id;
-  var qNum = db.ref('user/' + uid + '/qNumber');
 
   db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
@@ -406,30 +497,58 @@ app.put('/callq/:id', function (req, res) {
     uid: uid,
     id: id
   });
+});
+
+app.post('/callq/:id/:name', function (req, res) {
+  var form = req.body;
+  var uid = firebase.auth().currentUser.uid;
+  var id = req.params.id;
+  var name = req.params.name;
+  //var count = req.params.count;
+
+  var call = {
+    id: id,
+    name: name
+  };
+
+  db.ref('user/' + uid + '/callQ/callDefine/' + id).set(call);
+  res.json({
+    success: true,
+    message: 'Call Repeat!',
+    uid: uid,
+    id: id
+  });
 
 });
 
 app.delete('/user/reset', function (req, res) {
- 
+
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
+  var callQ = db.ref('user/' + uid + '/callQ/callDefine');
+  var willFin = db.ref('user/' + uid + '/callQ/willFinish');
+  callQ.remove();
   qNum.remove();
+  willFin.remove();
+
   res.json({
     success: true,
     message: 'Reset Complete!',
     uid: uid
   });
 });
+
 app.put('/user/reset', function (req, res) {
- 
+
   var uid = firebase.auth().currentUser.uid;
-  db.ref('user/' + uid + '/callNow').set("0");
+  db.ref('user/' + uid + '/callQ/callNow').set("0");
   res.json({
     success: true,
     message: 'Reset Complete!',
     uid: uid
   });
 });
+
 app.put('/nextq/:id', function (req, res) {
 
   var form = req.body;
@@ -452,6 +571,8 @@ app.put('/nextq/:id', function (req, res) {
   });
 });
 
+
+
 app.put('/finishq/:id', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -467,6 +588,39 @@ app.put('/finishq/:id', function (req, res) {
     uid: uid,
     id: id
   });
+});
+
+app.get('/will/fin', function (req, res) {
+  var uid = firebase.auth().currentUser.uid;
+  var Ref = firebase.database().ref("user/" + uid + "/callQ/willFinish");
+  Ref.once("child_added", function (snapshot) {
+   res.json(snapshot.val());
+  });
+});
+
+app.delete('/will/fin/:id', function (req, res) {
+  var id = req.params.id;
+  var uid = firebase.auth().currentUser.uid;
+  var Ref = db.ref("user/" + uid + "/callQ/willFinish");
+  var Fin = db.ref("user/" + uid + "/callQ/willFinish/"+id);
+
+  Fin.remove();
+  res.json({
+    success: true,
+    message: 'Delete Complete!',
+    id: id
+  });
+  /*Ref.orderByChild("id").equalTo(id).limitToFirst(1).once("child_added", function (snapshot) {
+    snapshot.ref.remove();
+    res.json({
+      success: true,
+      message: 'Delete Complete!',
+      id: id
+    });
+  }, function (error) {
+    res.json("Error: " + error.code);
+  });*/
+ 
 });
 
 app.get('/doing', function (req, res) {
@@ -608,6 +762,6 @@ app.use(function (req, res, next) {
   }
 });*/
 
-app.listen(port, hostname, () => {
+app.listen(port, () => {
   console.log('UrQ API started at http://localhost:' + port);
 });
