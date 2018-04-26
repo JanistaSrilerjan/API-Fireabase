@@ -1,5 +1,5 @@
 module.exports = {
-    'port': 2200,
+    'port': 5050,
     'hostname': 'localhost',
     'apiKey': "AIzaSyAjMBhY296ZmgjXvKZ0WZrPthZ5kesB7C4",
     'authDomain': "urqproject-38bef.firebaseapp.com",
