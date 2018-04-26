@@ -665,11 +665,13 @@ app.get('/will/fin/:count',function(req,res){
   });
    
 });
-app.post('/will/fin',function(req,res){
+app.post('/will/fin/:id/:doing',function(req,res){
   var uid = firebase.auth().currentUser.uid;
+  var id =req.params.id;
+  var doing = req.params.doing;
   var fin ={
-    id:count,
-    no:c
+    id:id,
+    no:doing
   };
   db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
 });
