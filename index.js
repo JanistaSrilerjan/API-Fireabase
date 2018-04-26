@@ -656,7 +656,7 @@ app.get('/will/fin/:count',function(req,res){
     snapshot.forEach(function (childSnapshot) {
       cc++;
     });
-    res.json({
+    return res.json({
       success: true,
       count: cc
     });
