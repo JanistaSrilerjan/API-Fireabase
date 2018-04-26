@@ -160,7 +160,7 @@ app.put('/profile', function (req, res) {
   db.ref('user/' + uid + '/shopData').update(newShop);
   db.ref('user/' + uid + '/shopData/time').update(timeShop);
 
-  res.json({
+  return res.json({
     success: true,
     message: 'Your profile has been updated!',
     //token: token,
@@ -198,7 +198,7 @@ app.delete('/call/def/:id', function (req, res) {
   var callQ = db.ref('user/' + uid + '/callQ/callDefine/' + id);
 
   callQ.remove();
-  res.json({
+  return res.json({
     success: true,
     message: 'Delete Complete!',
     uid: uid
@@ -241,7 +241,7 @@ app.post('/user/addq', function (req, res) {
       repeat: "0"
     };
     db.ref('user/' + uid + '/qNumber/' + count).set(q);
-    res.json({
+    return res.json({
       success: true,
       nameCustomer: q.nameCustomer,
       noCustomer: q.noCustomer,
@@ -339,7 +339,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
       Fin.orderByChild("id").equalTo(count).once("child_added", function (snapshot) {
         res.json(snapshot.val());
       }, function (error) {
-        res.json("Error: " + error.code);
+        return res.json("Error: " + error.code);
       });
       var fin ={
         id:count,
@@ -400,7 +400,7 @@ app.put('/call/next/:count', function (req, res) {
       doing: c
     });
     db.ref('user/' + uid + '/qNumber/' + count).update(q);
-    res.json({
+    return res.json({
       success: true,
       message: "call q in system",
       count: count,
@@ -530,7 +530,7 @@ app.put('/callq/:id', function (req, res) {
   db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
   });
-  res.json({
+  return res.json({
     success: true,
     message: 'Call Repeat!',
     uid: uid,
@@ -551,7 +551,7 @@ app.post('/callq/:id/:name', function (req, res) {
   };
 
   db.ref('user/' + uid + '/callQ/callDefine/' + id).set(call);
-  res.json({
+  return res.json({
     success: true,
     message: 'Call Repeat!',
     uid: uid,
@@ -570,7 +570,7 @@ app.delete('/user/reset', function (req, res) {
   qNum.remove();
   willFin.remove();
 
-  res.json({
+ return res.json({
     success: true,
     message: 'Reset Complete!',
     uid: uid
@@ -581,7 +581,7 @@ app.put('/user/reset', function (req, res) {
 
   var uid = firebase.auth().currentUser.uid;
   db.ref('user/' + uid + '/callQ/callNow').set("0");
-  res.json({
+  return res.json({
     success: true,
     message: 'Reset Complete!',
     uid: uid
@@ -602,7 +602,7 @@ app.put('/nextq/:id', function (req, res) {
   /*db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
   });*/
-  res.json({
+  return res.json({
     success: true,
     message: 'Call Queue!',
     uid: uid,
@@ -619,7 +619,7 @@ app.put('/finishq/:id', function (req, res) {
     status: "finish"
   });
 
-  res.json({
+  return res.json({
     success: true,
     message: 'Finish Queue!',
     uid: uid,
@@ -642,7 +642,7 @@ app.delete('/will/fin/:id', function (req, res) {
   var Fin = db.ref("user/" + uid + "/callQ/willFinish/"+id);
 
   Fin.remove();
-  res.json({
+  return res.json({
     success: true,
     message: 'Delete Complete!',
     id: id
@@ -718,7 +718,7 @@ app.put('/reserve/online', function (req, res) {
   };
   db.ref('user/' + uid + '/shopData/reserve').update(reserveOnline);
 
-  res.json({
+  return res.json({
     success: true,
     message: 'Reserve Online!',
     uid: uid
@@ -730,9 +730,9 @@ app.put('/reserve/close', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var reserve = {
     reserveStatus: form.reserveStatus
-  }
+  };
   db.ref('user/' + uid + '/shopData/reserve').update(reserve);
-  res.json({
+  return res.json({
     success: true,
     message: 'Reserve Online is Close!',
     uid: uid
@@ -751,7 +751,7 @@ app.post('/login', function (req, res) {
        var token = jwt.sign(payload, config.secret, {
          expiresIn: 86400 // expires in 24 hours
        });*/
-      res.json({
+      return res.json({
         success: true,
         message: 'Your account has been loged in!',
         email: userRecord.email,
