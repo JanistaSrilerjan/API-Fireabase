@@ -674,6 +674,11 @@ app.post('/will/fin/:id/:doing',function(req,res){
     no:doing
   };
   db.ref('user/' + uid + '/callQ/willFinish/' + doing).set(fin);
+  return res.json({
+    success: true,
+    id: id,
+    doing:doing
+  });
 });
 
 app.get('/doing', function (req, res) {
