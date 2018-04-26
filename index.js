@@ -361,6 +361,16 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
   });
 });
 
+app.get('/will/fin/doing',function(req,res){
+
+  var uid = firebase.auth().currentUser.uid;
+  var Fin = db.ref('user/' + uid + '/callQ/willFinish');
+
+  Fin.limitToLast(1).once("value", function (snapshot) {
+    res.json(snapshot);
+  });
+});
+
 app.post('/call/next/recent/:doing', function (req, res) { //call next q recently
   var form = req.body;
   var doing = req.params.doing;
