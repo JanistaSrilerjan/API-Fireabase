@@ -366,8 +366,8 @@ app.get('/will/fin/doing',function(req,res){
   var uid = firebase.auth().currentUser.uid;
   var Fin = db.ref('user/' + uid + '/callQ/willFinish');
 
-  Fin.limitToLast(1).once("value", function (snapshot) {
-    res.json(snapshot);
+  Fin.limitToLast(1).once("child_added", function (snapshot) {
+    res.json(snapshot.val());
   });
 });
 
