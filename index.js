@@ -341,12 +341,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
       }, function (error) {
         return res.json("Error: " + error.code);
       });
-      var fin ={
-        id:count,
-        no:c
-      };
-
-      db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
+      
       db.ref('user/' + uid + '/qNumber/' + count).set(q);   
       return res.json({
         success: true,
