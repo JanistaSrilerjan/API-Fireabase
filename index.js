@@ -360,6 +360,57 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
     
   });
 });
+
+app.post('/call/next/recent/:doing', function (req, res) { //call next q recently
+  var form = req.body;
+  var doing = req.params.doing;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var Ref = db.ref("user/" + uid + "/qNumber");
+  var Fin = db.ref('user/' + uid + '/callQ/willFinish');
+  var c = 0;
+  var count;
+
+  qNum.once("value", function (snapshot) {
+    count = snapshot.numChildren();
+    console.log("There are " + count + " queues");
+    count++;
+      var q = {
+        id: count,
+        nameCustomer: "None",
+        status: "doing",
+        addType: "2",
+        repeat: "0",
+        time: {
+          timeIn: form.timeIn,
+          timeOut: form.timeOut
+        },
+        doing: doing
+      }; 
+
+      Fin.orderByChild("id").equalTo(count).once("child_added", function (snapshot) {
+        res.json(snapshot.val());
+      }, function (error) {
+        return res.json("Error: " + error.code);
+      });
+      
+      db.ref('user/' + uid + '/qNumber/' + count).set(q);   
+      return res.json({
+        success: true,
+        message: "call q out system",
+        nameCustomer: q.nameCustomer,
+        noCustomer: q.noCustomer,
+        uid: uid,
+        count: count,
+        status: q.status,
+        addType: "call_next_recently",
+        doing:doing
+      });
+   
+    
+  });
+});
+
 app.get('/have/doing/:id',function(req,res){
 
   var id =req.params.id;
