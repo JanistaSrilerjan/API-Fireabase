@@ -310,11 +310,10 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
   var Ref = db.ref("user/" + uid + "/qNumber");
-  //var Fin = db.ref('user/' + uid + '/callQ/willFinish');
+  var Fin = db.ref('user/' + uid + '/callQ/willFinish');
   var c = 0;
   var count;
 
-  
   qNum.once("value", function (snapshot) {
     count = snapshot.numChildren();
     console.log("There are " + count + " queues");
@@ -336,10 +335,17 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
         },
         doing: c
       }; 
+
+      Fin.orderByChild("id").equalTo(count).once("child_added", function (snapshot) {
+        res.json(snapshot.val());
+      }, function (error) {
+        res.json("Error: " + error.code);
+      });
       var fin ={
         id:count,
         no:c
       };
+
       db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
       db.ref('user/' + uid + '/qNumber/' + count).set(q);   
       res.json({
@@ -357,6 +363,18 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
       res.json("Error: " + error.code);
     });
     
+  });
+});
+app.get('/have/doing/:id',function(req,res){
+
+  var id =req.params.id;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber/' + id +'/doing');
+  var c=0;
+  qNum.once("value", function (snapshot) {
+    res.json(snapshot);
+  }, function (error) {
+    res.json("Error: " + error.code);
   });
 });
 
@@ -381,18 +399,39 @@ app.put('/call/next/:count', function (req, res) {
     db.ref('user/' + uid + '/qNumber/' + count).update({
       doing: c
     });
-    var fin={
-      id:count,
-      no:c
-    }
     db.ref('user/' + uid + '/qNumber/' + count).update(q);
-    db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
     res.json({
       success: true,
       message: "call q in system",
       count: count,
       status: q.status,
       doing: c
+    });
+    console.log(count);
+  }, function (error) {
+    res.json("Error: " + error.code);
+  });
+
+});
+
+app.put('/call/def/:count', function (req, res) {
+  var form = req.body;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var Ref = firebase.database().ref("user/" + uid + "/qNumber");
+  
+  var count = req.params.count;
+
+  var q = {
+    status: "doing"
+  };
+  Ref.orderByChild("status").equalTo("doing").once("value", function (snapshot) {
+    db.ref('user/' + uid + '/qNumber/' + count).update(q);
+    res.json({
+      success: true,
+      message: "call q in system",
+      count: count,
+      status: q.status
     });
     console.log(count);
   }, function (error) {
@@ -571,8 +610,6 @@ app.put('/nextq/:id', function (req, res) {
   });
 });
 
-
-
 app.put('/finishq/:id', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -610,17 +647,36 @@ app.delete('/will/fin/:id', function (req, res) {
     message: 'Delete Complete!',
     id: id
   });
-  /*Ref.orderByChild("id").equalTo(id).limitToFirst(1).once("child_added", function (snapshot) {
-    snapshot.ref.remove();
+});
+
+app.get('/will/fin/:count',function(req,res){
+
+  var uid = firebase.auth().currentUser.uid;
+  var Fin = db.ref('user/' + uid + '/callQ/willFinish');
+  var c = req.params.c;
+  var count = req.params.count;
+  var cc =0;
+
+  Fin.orderByChild("id").equalTo(count).on("value", function (snapshot) {
+    snapshot.forEach(function (childSnapshot) {
+      cc++;
+    });
     res.json({
       success: true,
-      message: 'Delete Complete!',
-      id: id
+      count: cc
     });
   }, function (error) {
     res.json("Error: " + error.code);
-  });*/
- 
+  });
+   
+});
+app.post('/will/fin',function(req,res){
+  var uid = firebase.auth().currentUser.uid;
+  var fin ={
+    id:count,
+    no:c
+  };
+  db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
 });
 
 app.get('/doing', function (req, res) {
