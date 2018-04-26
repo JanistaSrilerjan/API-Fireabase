@@ -470,6 +470,34 @@ app.put('/call/next/:count', function (req, res) {
 
 });
 
+app.put('/call/next/:count/:doing', function (req, res) {
+  var form = req.body;
+  var uid = firebase.auth().currentUser.uid;
+  var qNum = db.ref('user/' + uid + '/qNumber');
+  var Ref = firebase.database().ref("user/" + uid + "/qNumber");
+  
+  var count = req.params.count;
+  var doing =req.params.doing;
+  var c = 0;
+
+  var q = {
+    status: "doing"
+  };
+
+ 
+    db.ref('user/' + uid + '/qNumber/' + count).update({
+      doing: doing
+    });
+    db.ref('user/' + uid + '/qNumber/' + count).update(q);
+    return res.json({
+      success: true,
+      message: "call q in system",
+      count: count,
+      status: q.status,
+      doing: doing
+    });
+});
+
 app.put('/call/def/:count', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
