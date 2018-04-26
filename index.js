@@ -652,7 +652,7 @@ app.get('/will/fin/:count',function(req,res){
   var count = req.params.count;
   var cc =0;
 
-  Fin.orderByChild("id").equalTo(count).on("value", function (snapshot) {
+  Fin.orderByChild("id").equalTo(count).once("value", function (snapshot) {
     snapshot.forEach(function (childSnapshot) {
       cc++;
     });
