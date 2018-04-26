@@ -4,6 +4,7 @@
   "description": "api with firebase",
   "main": "index.js",
   "scripts": {
+    "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,5 +29,8 @@
     "merge-json": "0.1.0-b.3",
     "node-datetime": "^2.0.6",
     "node-fetch": "^2.1.2"
+  },
+  "engines": {
+    "node": "9.10.1"
   }
 }
