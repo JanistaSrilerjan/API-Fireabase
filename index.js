@@ -491,7 +491,7 @@ app.put('/call/next/:count/:doing', function (req, res) {
     db.ref('user/' + uid + '/qNumber/' + count).update(q);
     return res.json({
       success: true,
-      message: "call q in system",
+      message: "call q in system3",
       count: count,
       status: q.status,
       doing: doing
@@ -513,7 +513,7 @@ app.put('/call/def/:count', function (req, res) {
     db.ref('user/' + uid + '/qNumber/' + count).update(q);
     res.json({
       success: true,
-      message: "call q in system",
+      message: "call q in system2",
       count: count,
       status: q.status
     });
