@@ -673,7 +673,7 @@ app.post('/will/fin/:id/:doing',function(req,res){
     id:id,
     no:doing
   };
-  db.ref('user/' + uid + '/callQ/willFinish/' + c).set(fin);
+  db.ref('user/' + uid + '/callQ/willFinish/' + doing).set(fin);
 });
 
 app.get('/doing', function (req, res) {
