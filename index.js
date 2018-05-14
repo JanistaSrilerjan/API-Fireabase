@@ -36,6 +36,7 @@ app.get('/', function (req, res) {
   res.send('Hello! The API is at http://localhost:' + port + '/api');
 });
 
+//get all data
 app.get('/user', function (req, res) {
 
   data.once("value", function (snapshot) {
@@ -43,9 +44,9 @@ app.get('/user', function (req, res) {
   });
 });
 
+//get user data
 app.get('/user/profile', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
-  // var uid = req.params.uid;
   var user = db.ref('user/' + uid);
   console.log(uid);
 
@@ -54,6 +55,7 @@ app.get('/user/profile', function (req, res) {
   });
 });
 
+//signup
 app.post('/signup', function (req, res) {
   var form = req.body;
   firebase.auth().createUserWithEmailAndPassword(form.email, form.password).then(
@@ -96,18 +98,9 @@ app.post('/signup', function (req, res) {
       console.log('Your account has been created!');
       console.log(uid);
 
-
-      /*  const payload = {
-          email: user.email,
-        };
-        var token = jwt.sign(payload, config.secret, {
-          expiresIn: 86400 // expires in 24 hours
-        });*/
-
       res.json({
         success: true,
         message: 'Your account has been created!',
-        //token: token,
         name: form.username,
         uid: uid
       });
@@ -137,8 +130,9 @@ app.post('/signup', function (req, res) {
   );
 });
 
+//update profile
 app.put('/profile', function (req, res) {
-  //var uid = req.params.uid;
+
   var uid = firebase.auth().currentUser.uid;
   var form = req.body;
 
@@ -163,11 +157,11 @@ app.put('/profile', function (req, res) {
   return res.json({
     success: true,
     message: 'Your profile has been updated!',
-    //token: token,
     uid: uid
   });
 });
 
+//count all queue
 app.get('/count/q', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var count;
@@ -192,6 +186,7 @@ app.get('/count/define', function (req, res) {
   });
 });
 
+//delete list of doing queue that user defined
 app.delete('/call/def/:id', function (req, res) {
   var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
@@ -218,12 +213,12 @@ app.get('/user/addq', function (req, res) {
   });
 });
 
+//add detail queue into qNumber
 app.post('/user/addq', function (req, res) {
   var form = req.body;
-  //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber');
-  var rand = Math.floor(1000 + Math.random() * 9000);
+  var rand = Math.floor(1000 + Math.random() * 9000); //random pin 4 digits
   var pin = rand.toString();
   var count;
 
@@ -254,6 +249,7 @@ app.post('/user/addq', function (req, res) {
   });
 });
 
+//set a queue is calling now
 app.put('/call/now/:numq', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var numq = req.params.numq;
@@ -265,6 +261,7 @@ app.put('/call/now/:numq', function (req, res) {
   });
 });
 
+//data of a queue 
 app.get('/dataq/:id', function (req, res) {
   var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
@@ -274,6 +271,7 @@ app.get('/dataq/:id', function (req, res) {
   });
 });
 
+//get data of doing queue that defined by user
 app.get('/data/doing/', function (req, res) {
   var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
@@ -283,6 +281,7 @@ app.get('/data/doing/', function (req, res) {
   });
 });
 
+//get number of doing queue that defined number by user 
 app.get('/cdata/doing', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = db.ref("user/" + uid + '/callQ/callDefine');
@@ -296,7 +295,7 @@ app.get('/cdata/doing', function (req, res) {
   });
 });
 
-app.get('/call/now', function (req, res) {
+app.get('/call/now', function (req, res) { //get main queue number that doing now
   var uid = firebase.auth().currentUser.uid;
   var state = db.ref('user/' + uid + '/callQ/callNow');
   state.once("value", function (snapshot) {
@@ -361,6 +360,7 @@ app.post('/call/next/recent', function (req, res) { //call next q recently
   });
 });
 
+//get last queue that expected finish
 app.get('/will/fin/doing',function(req,res){
 
   var uid = firebase.auth().currentUser.uid;
@@ -371,6 +371,7 @@ app.get('/will/fin/doing',function(req,res){
   });
 });
 
+//post data of doing queue that user added by click next queue button
 app.post('/call/next/recent/:doing', function (req, res) { //call next q recently
   var form = req.body;
   var doing = req.params.doing;
@@ -421,12 +422,13 @@ app.post('/call/next/recent/:doing', function (req, res) { //call next q recentl
   });
 });
 
+//get sequence of doing queue
 app.get('/have/doing/:id',function(req,res){
 
   var id =req.params.id;
   var uid = firebase.auth().currentUser.uid;
   var qNum = db.ref('user/' + uid + '/qNumber/' + id +'/doing');
-  var c=0;
+  
   qNum.once("value", function (snapshot) {
     res.json(snapshot);
   }, function (error) {
@@ -434,6 +436,7 @@ app.get('/have/doing/:id',function(req,res){
   });
 });
 
+//change status of queue is doing
 app.put('/call/next/:count', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
@@ -470,6 +473,7 @@ app.put('/call/next/:count', function (req, res) {
 
 });
 
+//change status of queue is doing and add sequence of doing queue
 app.put('/call/next/:count/:doing', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
@@ -498,6 +502,7 @@ app.put('/call/next/:count/:doing', function (req, res) {
     });
 });
 
+//change queue status is 'doing' [define q]
 app.put('/call/def/:count', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
@@ -524,6 +529,7 @@ app.put('/call/def/:count', function (req, res) {
 
 });
 
+//get data of first queue number that queueing now 
 app.get('/next', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
@@ -606,6 +612,7 @@ app.get('/count/online', function (req, res) {
   });
 });
 
+//change status to repeat of a queue that user called 
 app.put('/callq/:id', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
@@ -614,6 +621,7 @@ app.put('/callq/:id', function (req, res) {
   db.ref('user/' + uid + '/qNumber/' + id).update({
     repeat: "1"
   });
+
   return res.json({
     success: true,
     message: 'Call Repeat!',
@@ -622,12 +630,12 @@ app.put('/callq/:id', function (req, res) {
   });
 });
 
+//add detail of queue : queue number and name customer [path callDefine in database]
 app.post('/callq/:id/:name', function (req, res) {
   var form = req.body;
   var uid = firebase.auth().currentUser.uid;
   var id = req.params.id;
   var name = req.params.name;
-  //var count = req.params.count;
 
   var call = {
     id: id,
@@ -644,6 +652,7 @@ app.post('/callq/:id/:name', function (req, res) {
 
 });
 
+//remove all queue
 app.delete('/user/reset', function (req, res) {
 
   var uid = firebase.auth().currentUser.uid;
@@ -661,6 +670,7 @@ app.delete('/user/reset', function (req, res) {
   });
 });
 
+//set queue that calling now to 0
 app.put('/user/reset', function (req, res) {
 
   var uid = firebase.auth().currentUser.uid;
@@ -672,6 +682,7 @@ app.put('/user/reset', function (req, res) {
   });
 });
 
+//add time in and time out [click next queue button]
 app.put('/nextq/:id', function (req, res) {
 
   var form = req.body;
@@ -683,9 +694,7 @@ app.put('/nextq/:id', function (req, res) {
     timeOut: form.timeOut
   };
   db.ref('user/' + uid + '/qNumber/' + id + '/time').update(time);
-  /*db.ref('user/' + uid + '/qNumber/' + id).update({
-    repeat: "1"
-  });*/
+
   return res.json({
     success: true,
     message: 'Call Queue!',
@@ -694,6 +703,7 @@ app.put('/nextq/:id', function (req, res) {
   });
 });
 
+//change status of queue to finish
 app.put('/finishq/:id', function (req, res) {
   //var uid = req.params.uid;
   var uid = firebase.auth().currentUser.uid;
@@ -711,6 +721,7 @@ app.put('/finishq/:id', function (req, res) {
   });
 });
 
+//get data of queue that expected finish first
 app.get('/will/fin', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/callQ/willFinish");
@@ -719,6 +730,7 @@ app.get('/will/fin', function (req, res) {
   });
 });
 
+//delete data of queue that expected finish first
 app.delete('/will/fin/:id', function (req, res) {
   var id = req.params.id;
   var uid = firebase.auth().currentUser.uid;
@@ -754,6 +766,8 @@ app.get('/will/fin/:count',function(req,res){
   });
    
 });
+
+//keep queue number and sequence of doing queue 
 app.post('/will/fin/:id/:doing',function(req,res){
   var uid = firebase.auth().currentUser.uid;
   var id =req.params.id;
@@ -780,6 +794,7 @@ app.get('/doing', function (req, res) {
   });
 });
 
+//number of queues that are doing in server
 app.get('/count/doing', function (req, res) {
   var uid = firebase.auth().currentUser.uid;
   var Ref = firebase.database().ref("user/" + uid + "/qNumber");
@@ -830,23 +845,18 @@ app.put('/reserve/close', function (req, res) {
   });
 });
 
+//login
 app.post('/login', function (req, res) {
   var form = req.body;
   firebase.auth().signInWithEmailAndPassword(form.email, form.password).then(function (userRecord) {
       console.log('User authentication successful');
       console.log(userRecord.email);
       var uuid = firebase.auth().currentUser.uid;
-      /* const payload = {
-         email: userRecord.email,
-       };
-       var token = jwt.sign(payload, config.secret, {
-         expiresIn: 86400 // expires in 24 hours
-       });*/
+      
       return res.json({
         success: true,
         message: 'Your account has been loged in!',
         email: userRecord.email,
-        //token: token,
         uid: userRecord.uid,
         uuid: uuid
       });
